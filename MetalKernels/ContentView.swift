@@ -136,7 +136,7 @@ class HSLAdjustFilter: CIFilter {
     var satOffset: CGFloat?
     var lumOffset: CGFloat?
    
-    static var kernel: CIKernel = { () -> CIColorKernel in
+    static var kernel: CIColorKernel = {
         guard let url = Bundle.main.url(forResource: "HSLAdjustKernel.ci", withExtension: "metallib"),
               let data = try? Data(contentsOf: url)
         else { fatalError("Unable to load metallib") }
@@ -152,7 +152,7 @@ class HSLAdjustFilter: CIFilter {
         guard let inputImage = self.inputImage else { return nil }
         
         
-        return HSLAdjustFilter.kernel.apply(extent: inputImage.extent, roiCallback: { _, rect in return rect }, arguments: [inputImage, self.center ?? 0, self.hueOffset ?? 0, self.satOffset ?? 0, self.lumOffset ?? 0])
+        return HSLAdjustFilter.kernel.apply(extent: inputImage.extent, arguments: [inputImage, self.center ?? 0, self.hueOffset ?? 0, self.satOffset ?? 0, self.lumOffset ?? 0])
     }
     
 }
