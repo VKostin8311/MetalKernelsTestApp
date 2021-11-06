@@ -11,103 +11,49 @@ using namespace metal;
 
 #include <CoreImage/CoreImage.h>
 
+/// Converts colors from HSL to linear RGB.
+/// Based on work by Sam Hocevar and Emil Persson.
+half3 hslToRGB(half3 hsl) {
+    const float r = abs(hsl.x * 6.0h - 3.0h) - 1.0h;
+    const float g = 2.0h - abs(hsl.x * 6.0h - 2.0h);
+    const float b = 2.0h - abs(hsl.x * 6.0h - 4.0h);
+    const half3 rgb = clamp(half3(r, g, b), 0.0h, 1.0h);
+    const half c = (1.0h - abs(2.0h * hsl.z - 1.0h)) * hsl.y;
+    return (rgb - 0.5h) * c + hsl.z;
+}
+
+/// Converts colors from linear RGB to HSL.
+/// Based on work by Sam Hocevar and Emil Persson.
+half3 rgbToHSL(half3 rgb) {
+    const half epsilon = 1.0e-5h;
+
+    // RGB to HCV
+    const half4 p = (rgb.y < rgb.z) ? half4(rgb.z, rgb.y, -1.0h, 2.0h / 3.0h) : half4(rgb.y, rgb.z, 0.0h, -1.0h / 3.0h);
+    const half4 q = (rgb.x < p.x) ? half4(p.x, p.y, p.w, rgb.x) : half4(rgb.x, p.y, p.z, p.x);
+    const half c = q.x - min(q.w, q.y);
+    const half h = abs((q.w - q.y) / (6.0h * c + epsilon) + q.z);
+    const half3 hcv = half3(h, c, q.x);
+
+    const half l = hcv.z - hcv.y * 0.5h;
+    const half s = hcv.y / (1.0h - abs(l * 2.0h - 1.0h) + epsilon);
+    return half3(hcv.x, s, l);
+}
+
 extern "C" {
     namespace coreimage {
         
         half4 hslFilterKernel(sample_h s, half center, half hueOffset, half satOffset, half lumOffset) {
-            // 1: Convert pixel color from RGB to HSLw
-            
-            half maxComp = (s.r > s.g && s.r > s.b) ? s.r : (s.g > s.b) ? s.g : s.b ;
-            half minComp = (s.r < s.g && s.r < s.b) ? s.r : (s.g < s.b) ? s.g : s.b ;
+            const half3 hsl = rgbToHSL(s.rgb);
 
-            half inputHue = (maxComp + minComp) / 2.0h ;
-            half inputSat = (maxComp + minComp) / 2.0h ;
-            half inputLum = (maxComp + minComp) / 2.0h ;
+            half minHue = center - (22.5h / 360.0h);
+            half maxHue = center + (22.5h / 360.0h);
 
-            if (maxComp == minComp) {
-                inputHue = 0.0h ;
-                inputSat = 0.0h ;
-            }
-            else {
-                half delta = maxComp - minComp ;
+            // no need to apply adjustments when not in hue range
+            if (hsl.x < minHue || hsl.x > maxHue) { return s; }
 
-                inputSat = inputLum > 0.5h ? delta/(2.0h - maxComp - minComp) : delta/(maxComp + minComp);
+            const half3 adjustedHSL = hsl + half3(hueOffset, satOffset, lumOffset);
 
-                if (s.r > s.g && s.r > s.b) {
-                    inputHue = (s.g - s.b)/delta + (s.g < s.b ? 6.0h : 0.0h);
-                } else if (s.g > s.b) {
-                    inputHue = (s.b - s.r)/delta + 2.0h;
-                }
-                else {
-                    inputHue = (s.r - s.g)/delta + 4.0h;
-                }
-                inputHue = inputHue / 6.0h ;
-            }
-
-            half minHue = center - 22.5h / 360.0h;
-            half maxHue = center + 22.5h / 360.0h;
-
-            // Apply offsets to Hue, Saturation, Luminance
-
-            half adjustedHue = inputHue + ((inputHue > minHue && inputHue < maxHue) ? hueOffset : 0.0h );
-            half adjustedSat = inputSat + ((inputHue > minHue && inputHue < maxHue) ? satOffset : 0.0h );
-            half adjustedLum = inputLum + ((inputHue > minHue && inputHue < maxHue) ? lumOffset : 0.0h );
-
-            // Convert pixel color from HSL to RGB
-
-            half red = 0.0h;
-            half green = 0.0h;
-            half blue = 0.0h;
-
-            if (adjustedSat == 0.0h) {
-                red = adjustedLum;
-                green = adjustedLum;
-                blue = adjustedLum;
-            } else {
-                half q = adjustedLum < 0.5h ? adjustedLum*(1.0h + adjustedSat) : adjustedLum + adjustedSat - (adjustedLum*adjustedSat);
-                half p = 2.0h * adjustedLum - q;
-
-                // Calculate Red color
-                half t = adjustedHue + 1.0h/3.0h;
-                if (t < 0.0h) { t += 1.0h; }
-                if (t > 1.0h) { t -= 1.0h; }
-
-                if (t < 1.0h/6.0h) { red = p + (q - p) * 6.0h * t; }
-                else if (t < 1.0h/2.0h) { red = q; }
-                else if (t < 2.0h/3.0h) { red = p + (q - p)*(2.0h/3.0h - t) * 6.0h; }
-                else { red = p; }
-
-                // Calculate Green color
-                t = adjustedHue;
-                if (t < 0.0h) { t += 1.0h; }
-                if (t > 1.0h) { t -= 1.0h; }
-
-                if (t < 1.0h/6.0h) { green = p + (q - p) * 6.0h * t; }
-                else if (t < 1.0h/2.0h) { green = q ;}
-                else if (t < 2.0h/3.0h) { green = p + (q - p)*(2.0h/3.0h - t) * 6.0h; }
-                else { green = p; }
-
-                // Calculate Blue color
-
-                t = adjustedHue - 1.0h/3.0h;
-                if (t < 0.0h) { t += 1.0h; }
-                if (t > 1.0h) { t -= 1.0h; }
-
-                if (t < 1.0h/6.0h) { blue = p + (q - p) * 6.0h * t; }
-                else if (t < 1.0h/2.0h) { blue = q; }
-                else if (t < 2.0h/3.0h) { blue = p + (q - p)*(2.0h/3.0h - t) * 6.0h;}
-                else { blue = p; }
-
-            }
-
-            half4 outColor;
-            outColor.r = red;
-            outColor.g = green;
-            outColor.b = blue;
-            outColor.a = s.a;
-            
-            return outColor;
-            
+            return half4(hslToRGB(adjustedHSL), s.a);
         }
     }
 }
