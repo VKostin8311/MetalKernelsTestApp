@@ -62,13 +62,13 @@ struct ContentView: View {
         
         if intensity == 0 { return inputImage }
         
-        guard let url = Bundle.main.url(forResource: "Neutral_LUT_144", withExtension: "png") else { return inputImage }
+        guard let url = Bundle.main.url(forResource: "Neutral_LUT_64", withExtension: "png") else { return inputImage }
         guard let cubeImage = CIImage(contentsOf: url) else { return inputImage }
         
-        let filter = ColorLookUp144()
+        let filter = ColorLookUp()
         filter.inputImage = inputImage
         filter.inputLUT = cubeImage
-        filter.inputIntensity = CGFloat(abs(intensity/100))
+        filter.inputIntensity = CGFloat(intensity/100)
         
         if let output = filter.outputImage { return output }
         
@@ -77,18 +77,18 @@ struct ContentView: View {
 
 }
 
-class ColorLookUp64: CIFilter {
+class ColorLookUp: CIFilter {
     
     var inputImage: CIImage?
     var inputLUT: CIImage?
     var inputIntensity: CGFloat = 1.0
     
     static var kernel: CIKernel = {
-        guard let url = Bundle.main.url(forResource: "LUT_64.ci", withExtension: "metallib"),
+        guard let url = Bundle.main.url(forResource: "ColorCube.ci", withExtension: "metallib"),
               let data = try? Data(contentsOf: url)
         else { fatalError("Unable to load metallib") }
         
-        guard let kernel = try? CIKernel(functionName: "filterKernel", fromMetalLibraryData: data)
+        guard let kernel = try? CIKernel(functionName: "commitLUT64", fromMetalLibraryData: data)
         else { fatalError("Unable to create color kernel") }
         
         return kernel
@@ -98,41 +98,12 @@ class ColorLookUp64: CIFilter {
         
         guard let image = inputImage, let lut = inputLUT else { return inputImage }
         
-        return ColorLookUp64.kernel.apply(
+        return ColorLookUp.kernel.apply(
             extent: image.extent,
             roiCallback: { (index, dest) -> CGRect in if index == 0 { return dest } else { return lut.extent } },
             arguments: [image, lut, inputIntensity])
     }
 }
-
-class ColorLookUp144: CIFilter {
-    
-    var inputImage: CIImage?
-    var inputLUT: CIImage?
-    var inputIntensity: CGFloat = 1.0
-    
-    static var kernel: CIKernel = {
-        guard let url = Bundle.main.url(forResource: "LUT_144.ci", withExtension: "metallib"),
-              let data = try? Data(contentsOf: url)
-        else { fatalError("Unable to load metallib") }
-        
-        guard let kernel = try? CIKernel(functionName: "filterKernel", fromMetalLibraryData: data)
-        else { fatalError("Unable to create color kernel") }
-        
-        return kernel
-    }()
-    
-    override var outputImage: CIImage? {
-        
-        guard let image = inputImage, let lut = inputLUT else { return inputImage }
-        
-        return ColorLookUp144.kernel.apply(
-            extent: image.extent,
-            roiCallback: { (index, dest) -> CGRect in if index == 0 { return dest } else { return lut.extent } },
-            arguments: [image, lut, inputIntensity])
-    }
-}
-
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
