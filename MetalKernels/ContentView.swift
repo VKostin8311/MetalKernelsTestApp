@@ -10,164 +10,130 @@ import SwiftUI
 
 
 struct ContentView: View {
-    let context = CIContext()
     
-    @State var showImporter = false
-    @State var showInitial = false
+    let context: CIContext
     
-    @State var initialImage = CIImage.empty()
     @State var processedImage = CIImage.empty()
-    
-    @State var initImage: CGImage?
     @State var presentedImage: CGImage?
-
-    @State var center: HSLColors = .red
-   
-    @State var hue: Float = 0
-    @State var saturation: Float = 0
-    @State var luminance: Float = 0
+    @State var intensity: Float = 0
     
-
+    init() {
+        guard let mtlDevice = MTLCreateSystemDefaultDevice() else { fatalError() }
+        
+        self.context = CIContext(mtlDevice: mtlDevice)
+    }
+    
     var body: some View {
         VStack(alignment: .center, spacing: 0){
-            ToolBarView(showImporter: $showImporter)
-            HStack(alignment: .top, spacing: 0){
-                if presentedImage != nil {
-                    Image(showInitial ? initImage! : presentedImage!, scale: 1.0, label: Text(""))
+            
+            VStack(alignment: .center, spacing: 0){
+                if let presentedImage = presentedImage {
+                    Image(presentedImage, scale: 1.0, label: Text(""))
                         .resizable()
-                        .frame(width: 3*(UIScreen.sHeight-64)/4, height: UIScreen.sHeight-64, alignment: .center)
-                        .onLongPressGesture(minimumDuration: 300, maximumDistance: 32) {
-                            
-                        } onPressingChanged: { value in
-                            showInitial = value
-                        }
+                        .scaledToFit()
 
                 } else {
                     Spacer()
                 }
                 VStack(alignment: .center, spacing: 8) {
-                    
-                    VStack(alignment: .center, spacing: 0) {
-                        
-                        Text("Hue: \(Int(hue))")
-                        Slider(value: $hue, in: -100...100, step: 1)
-                        Text("Saturation: \(Int(saturation))")
-                        Slider(value: $saturation, in: -100...100, step: 1)
-                        Text("Brightness: \(Int(luminance))")
-                        Slider(value: $luminance, in: -100...100, step: 1)
-                    }
-                    
+                    Text("Value: \(Int(intensity))")
+                    Slider(value: $intensity, in: 0...100, step: 1)
                 }
                 .frame(width: 2*UIScreen.sWidth/5)
             }
-            .padding(.horizontal, 24)
+            .padding(24)
+            
             Spacer()
         }
-        
-        .onChange(of: hue, perform: { newValue in
-            processedImage = imageProcessing(initialImage)
-        })
-        .onChange(of: saturation, perform: { newValue in
-            processedImage = imageProcessing(initialImage)
-        })
-        .onChange(of: luminance, perform: { newValue in
-            processedImage = imageProcessing(initialImage)
-        })
-        
-        .onChange(of: initialImage, perform: { value in
-            processedImage = imageProcessing(value)
-        })
-        
-        .onChange(of: processedImage, perform: { newValue in
-            presentedImage = context.createCGImage(newValue, from: newValue.extent)
+        .onAppear{
+            guard let url = Bundle.main.url(forResource: "APC_1345-2", withExtension: "dng") else {return}
+            guard let image = CIImage(contentsOf: url) else { return }
+            processedImage = image 
+            presentedImage = context.createCGImage(image, from: image.extent)
+        }
+        .onChange(of: intensity, perform: { newValue in
+            let image = imageProcessing(processedImage, intensity: newValue)
+            presentedImage = context.createCGImage(image, from: image.extent)
         })
         
         .ignoresSafeArea()
         .preferredColorScheme(.dark)
-        .fileImporter(isPresented: $showImporter, allowedContentTypes: [.data]) { (res) in
-            
-            do {
-                let fileURL = try res.get()
-                guard fileURL.startAccessingSecurityScopedResource() else {return}
-                
-                if let data = try? Data(contentsOf: fileURL) {
-                    
-                    if let image = CIImage(data: data, options: [CIImageOption.applyOrientationProperty : true]) {
-                        initialImage = image
-                        presentedImage = context.createCGImage(image, from: image.extent)
-                        initImage = presentedImage
-                    }
-                }
-                fileURL.stopAccessingSecurityScopedResource()
-            } catch {
-                print(error.localizedDescription)
-            }
-        }
         
     }
     
-    
-    func imageProcessing(_ inputImage: CIImage) -> CIImage {
-
-        let filter = HSLAdjustFilter()
+    func imageProcessing(_ inputImage: CIImage, intensity: Float) -> CIImage {
         
+        if intensity == 0 { return inputImage }
+        
+        guard let url = Bundle.main.url(forResource: "Neutral_LUT_144", withExtension: "png") else { return inputImage }
+        guard let cubeImage = CIImage(contentsOf: url) else { return inputImage }
+        
+        let filter = ColorLookUp144()
         filter.inputImage = inputImage
-        filter.center = 180/360
-        filter.hueOffset = CGFloat(hue/100)
-        filter.satOffset = CGFloat(saturation/100)
-        filter.lumOffset = CGFloat(luminance/100)
+        filter.inputLUT = cubeImage
+        filter.inputIntensity = CGFloat(abs(intensity/100))
         
-        if let outputImage = filter.outputImage {
-            return outputImage
-        } else {
-            return inputImage
-        }
+        if let output = filter.outputImage { return output }
+        
+        return inputImage
     }
-    
-    
+
 }
 
-
-class HSLAdjustFilter: CIFilter {
+class ColorLookUp64: CIFilter {
     
     var inputImage: CIImage?
-    var center: CGFloat?
-    var hueOffset: CGFloat?
-    var satOffset: CGFloat?
-    var lumOffset: CGFloat?
-   
-    static var kernel: CIColorKernel = {
-        guard let url = Bundle.main.url(forResource: "HSLAdjustKernel.ci", withExtension: "metallib"),
+    var inputLUT: CIImage?
+    var inputIntensity: CGFloat = 1.0
+    
+    static var kernel: CIKernel = {
+        guard let url = Bundle.main.url(forResource: "LUT_64.ci", withExtension: "metallib"),
               let data = try? Data(contentsOf: url)
         else { fatalError("Unable to load metallib") }
         
-        guard let kernel = try? CIColorKernel(functionName: "hslFilterKernel", fromMetalLibraryData: data)
+        guard let kernel = try? CIKernel(functionName: "filterKernel", fromMetalLibraryData: data)
         else { fatalError("Unable to create color kernel") }
         
         return kernel
     }()
     
-    
     override var outputImage: CIImage? {
-        guard let inputImage = self.inputImage else { return nil }
         
+        guard let image = inputImage, let lut = inputLUT else { return inputImage }
         
-        return HSLAdjustFilter.kernel.apply(extent: inputImage.extent, arguments: [inputImage, self.center ?? 0, self.hueOffset ?? 0, self.satOffset ?? 0, self.lumOffset ?? 0])
+        return ColorLookUp64.kernel.apply(
+            extent: image.extent,
+            roiCallback: { (index, dest) -> CGRect in if index == 0 { return dest } else { return lut.extent } },
+            arguments: [image, lut, inputIntensity])
     }
-    
 }
 
-enum HSLColors: Float {
+class ColorLookUp144: CIFilter {
     
-    case red = 0
-    case orange = 45
-    case yellow = 90
-    case green = 135
-    case cyan = 180
-    case blue = 225
-    case violet = 270
-    case magenta = 315
+    var inputImage: CIImage?
+    var inputLUT: CIImage?
+    var inputIntensity: CGFloat = 1.0
     
+    static var kernel: CIKernel = {
+        guard let url = Bundle.main.url(forResource: "LUT_144.ci", withExtension: "metallib"),
+              let data = try? Data(contentsOf: url)
+        else { fatalError("Unable to load metallib") }
+        
+        guard let kernel = try? CIKernel(functionName: "filterKernel", fromMetalLibraryData: data)
+        else { fatalError("Unable to create color kernel") }
+        
+        return kernel
+    }()
+    
+    override var outputImage: CIImage? {
+        
+        guard let image = inputImage, let lut = inputLUT else { return inputImage }
+        
+        return ColorLookUp144.kernel.apply(
+            extent: image.extent,
+            roiCallback: { (index, dest) -> CGRect in if index == 0 { return dest } else { return lut.extent } },
+            arguments: [image, lut, inputIntensity])
+    }
 }
 
 
@@ -176,3 +142,4 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+

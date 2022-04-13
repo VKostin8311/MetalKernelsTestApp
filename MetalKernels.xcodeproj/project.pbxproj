@@ -7,13 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E749606427EBDE9400B8BD9E /* APC_1345-2.dng in Resources */ = {isa = PBXBuildFile; fileRef = E749606327EBDE9400B8BD9E /* APC_1345-2.dng */; };
+		E7509C762806C857003EE740 /* LUT_144.ci.metal in Sources */ = {isa = PBXBuildFile; fileRef = E7509C752806C857003EE740 /* LUT_144.ci.metal */; };
+		E7509C7A280723C8003EE740 /* Neutral_LUT_144.png in Resources */ = {isa = PBXBuildFile; fileRef = E7509C79280723C8003EE740 /* Neutral_LUT_144.png */; };
+		E7846AD828050EDD00120254 /* LUT_64.ci.metal in Sources */ = {isa = PBXBuildFile; fileRef = E7846AD728050EDD00120254 /* LUT_64.ci.metal */; };
 		E7A1D973273489F200E8E64E /* MetalKernelsApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A1D972273489F200E8E64E /* MetalKernelsApp.swift */; };
 		E7A1D975273489F200E8E64E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A1D974273489F200E8E64E /* ContentView.swift */; };
 		E7A1D977273489F400E8E64E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E7A1D976273489F400E8E64E /* Assets.xcassets */; };
 		E7A1D97A273489F400E8E64E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E7A1D979273489F400E8E64E /* Preview Assets.xcassets */; };
-		E7A1D98227348A6800E8E64E /* ToolBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A1D98127348A6800E8E64E /* ToolBarView.swift */; };
 		E7A1D98427348A8900E8E64E /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A1D98327348A8900E8E64E /* Helpers.swift */; };
-		E7A1D98A27351D7600E8E64E /* HSLAdjustKernel.ci.metal in Sources */ = {isa = PBXBuildFile; fileRef = E7A1D98927351D7600E8E64E /* HSLAdjustKernel.ci.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
@@ -29,7 +31,7 @@
 				"$(DERIVED_FILE_DIR)/${INPUT_FILE_BASE}.air",
 			);
 			runOncePerArchitecture = 0;
-			script = "# Type a script or drag a script file from your workspace to insert its path.\nxcrun metal -c -fcikernel \"${INPUT_FILE_PATH}\" \\\n  -o \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			script = "xcrun metal -c -fcikernel \"${INPUT_FILE_PATH}\" \\\n  -o \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 		};
 		E7A1D98627348B7500E8E64E /* PBXBuildRule */ = {
 			isa = PBXBuildRule;
@@ -43,20 +45,22 @@
 				"$(METAL_LIBRARY_OUTPUT_DIR)/$(INPUT_FILE_BASE).metallib",
 			);
 			runOncePerArchitecture = 0;
-			script = "# Type a script or drag a script file from your workspace to insert its path.\nxcrun metallib -cikernel \"${INPUT_FILE_PATH}\" -o \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			script = "xcrun metallib -cikernel \"${INPUT_FILE_PATH}\" -o \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 		};
 /* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
+		E749606327EBDE9400B8BD9E /* APC_1345-2.dng */ = {isa = PBXFileReference; lastKnownFileType = file; path = "APC_1345-2.dng"; sourceTree = "<group>"; };
+		E7509C752806C857003EE740 /* LUT_144.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = LUT_144.ci.metal; sourceTree = "<group>"; };
+		E7509C79280723C8003EE740 /* Neutral_LUT_144.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Neutral_LUT_144.png; sourceTree = "<group>"; };
+		E7846AD728050EDD00120254 /* LUT_64.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = LUT_64.ci.metal; sourceTree = "<group>"; };
 		E7A1D96F273489F200E8E64E /* MetalKernels.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MetalKernels.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E7A1D972273489F200E8E64E /* MetalKernelsApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalKernelsApp.swift; sourceTree = "<group>"; };
 		E7A1D974273489F200E8E64E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		E7A1D976273489F400E8E64E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E7A1D979273489F400E8E64E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		E7A1D98027348A0400E8E64E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		E7A1D98127348A6800E8E64E /* ToolBarView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ToolBarView.swift; sourceTree = "<group>"; };
 		E7A1D98327348A8900E8E64E /* Helpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
-		E7A1D98927351D7600E8E64E /* HSLAdjustKernel.ci.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = HSLAdjustKernel.ci.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,11 +94,13 @@
 			isa = PBXGroup;
 			children = (
 				E7A1D98027348A0400E8E64E /* Info.plist */,
+				E749606327EBDE9400B8BD9E /* APC_1345-2.dng */,
 				E7A1D972273489F200E8E64E /* MetalKernelsApp.swift */,
-				E7A1D98127348A6800E8E64E /* ToolBarView.swift */,
 				E7A1D974273489F200E8E64E /* ContentView.swift */,
-				E7A1D98927351D7600E8E64E /* HSLAdjustKernel.ci.metal */,
+				E7509C79280723C8003EE740 /* Neutral_LUT_144.png */,
 				E7A1D98327348A8900E8E64E /* Helpers.swift */,
+				E7846AD728050EDD00120254 /* LUT_64.ci.metal */,
+				E7509C752806C857003EE740 /* LUT_144.ci.metal */,
 				E7A1D976273489F400E8E64E /* Assets.xcassets */,
 				E7A1D978273489F400E8E64E /* Preview Content */,
 			);
@@ -169,7 +175,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E7509C7A280723C8003EE740 /* Neutral_LUT_144.png in Resources */,
 				E7A1D97A273489F400E8E64E /* Preview Assets.xcassets in Resources */,
+				E749606427EBDE9400B8BD9E /* APC_1345-2.dng in Resources */,
 				E7A1D977273489F400E8E64E /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -181,11 +189,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E7A1D98227348A6800E8E64E /* ToolBarView.swift in Sources */,
+				E7846AD828050EDD00120254 /* LUT_64.ci.metal in Sources */,
 				E7A1D975273489F200E8E64E /* ContentView.swift in Sources */,
 				E7A1D973273489F200E8E64E /* MetalKernelsApp.swift in Sources */,
 				E7A1D98427348A8900E8E64E /* Helpers.swift in Sources */,
-				E7A1D98A27351D7600E8E64E /* HSLAdjustKernel.ci.metal in Sources */,
+				E7509C762806C857003EE740 /* LUT_144.ci.metal in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -324,7 +332,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -336,7 +344,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -356,7 +364,7 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -368,7 +376,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 2;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
