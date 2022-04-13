@@ -24,40 +24,37 @@ struct ContentView: View {
     }
     
     var body: some View {
+        
+        
         VStack(alignment: .center, spacing: 0){
-            
-            VStack(alignment: .center, spacing: 0){
-                if let presentedImage = presentedImage {
-                    Image(presentedImage, scale: 1.0, label: Text(""))
-                        .resizable()
-                        .scaledToFit()
-
-                } else {
-                    Spacer()
-                }
-                VStack(alignment: .center, spacing: 8) {
-                    Text("Value: \(Int(intensity))")
-                    Slider(value: $intensity, in: 0...100, step: 1)
-                }
-                .frame(width: 2*UIScreen.sWidth/5)
+            if let presentedImage = presentedImage {
+                Image(presentedImage, scale: 1.0, label: Text(""))
+            } else {
+                Spacer()
             }
-            .padding(24)
-            
+            VStack(alignment: .center, spacing: 8) {
+                Text("Value: \(Int(intensity))")
+                Slider(value: $intensity, in: 0...100, step: 1)
+            }
+            .frame(width: 2*UIScreen.sWidth/5)
             Spacer()
         }
+        .ignoresSafeArea()
+        .preferredColorScheme(.dark)
         .onAppear{
             guard let url = Bundle.main.url(forResource: "APC_1345-2", withExtension: "dng") else {return}
+            
             guard let image = CIImage(contentsOf: url) else { return }
-            processedImage = image 
-            presentedImage = context.createCGImage(image, from: image.extent)
+            
+            processedImage = image.oriented(forExifOrientation: 5)
+            presentedImage = context.createCGImage(processedImage, from: processedImage.extent)
         }
         .onChange(of: intensity, perform: { newValue in
             let image = imageProcessing(processedImage, intensity: newValue)
             presentedImage = context.createCGImage(image, from: image.extent)
         })
         
-        .ignoresSafeArea()
-        .preferredColorScheme(.dark)
+        
         
     }
     
